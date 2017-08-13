@@ -74,7 +74,7 @@ class WordsData(object):
 
     """
 
-    def __init__(self, asl:AslDb, csvfile:str, feature_list:list):
+    def __init__(self, asl, csvfile, feature_list):
         """ loads training data sequences suitable for use with hmmlearn library based on feature_method chosen
 
         :param asl: ASLdata object
@@ -135,7 +135,7 @@ class WordsData(object):
         """
         return self._hmm_data
 
-    def get_word_sequences(self, word:str):
+    def get_word_sequences(self, word):
         """ getter for single word series of sequences of feature lists for each frame
 
         :param word: str
@@ -145,7 +145,7 @@ class WordsData(object):
         """
         return self._data[word]
 
-    def get_word_Xlengths(self, word:str):
+    def get_word_Xlengths(self, word):
         """ getter for single word (X, lengths) tuple for use with hmmlearn library
 
         :param word:
@@ -162,7 +162,7 @@ class SinglesData(object):
 
     """
 
-    def __init__(self, asl:AslDb, csvfile:str, feature_list):
+    def __init__(self, asl, csvfile, feature_list):
         """ loads training data sequences suitable for use with hmmlearn library based on feature_method chosen
 
         :param asl: ASLdata object
@@ -245,7 +245,7 @@ class SinglesData(object):
         """
         return self._hmm_data
 
-    def get_item_sequences(self, item:int):
+    def get_item_sequences(self, item):
         """ getter for single item series of sequences of feature lists for each frame
 
         :param word: str
@@ -255,7 +255,7 @@ class SinglesData(object):
         """
         return self._data[item]
 
-    def get_item_Xlengths(self, item:int):
+    def get_item_Xlengths(self, item):
         """ getter for single item (X, lengths) tuple for use with hmmlearn library
 
         :param word:

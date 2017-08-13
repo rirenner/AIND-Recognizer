@@ -8,12 +8,16 @@ from sklearn.model_selection import KFold
 from asl_utils import combine_sequences
 
 
+from pprint import pprint as pp
+def jfp(obj):
+     return pp([x for x in dir(obj) if not x.startswith('_')])
+
 class ModelSelector(object):
     '''
     base class for model selection (strategy design pattern)
     '''
 
-    def __init__(self, all_word_sequences: dict, all_word_Xlengths: dict, this_word: str,
+    def __init__(self, all_word_sequences, all_word_Xlengths, this_word,
                  n_constant=3,
                  min_n_components=2, max_n_components=10,
                  random_state=14, verbose=False):
@@ -68,16 +72,46 @@ class SelectorBIC(ModelSelector):
     Bayesian information criteria: BIC = -2 * logL + p * logN
     """
 
+    # def train_a_word(word, num_hidden_states, features):
+
+    #   warnings.filterwarnings("ignore", category=DeprecationWarning)
+    #    training = asl.build_training(features)
+    #    X, lengths = training.get_word_Xlengths(word)
+    #    model = GaussianHMM(n_components=num_hidden_states, n_iter=1000).fit(X, lengths)
+    #    logL = model.score(X, lengths)
+    #    return model, logL
+
+    # demoword = 'BOOK'
+    # model, logL = train_a_word(demoword, 3, features_ground)
+    # print("Number of states trained in model for {} is {}".format(demoword, model.n_components))
+    # print("logL = {}".format(logL))
+
+    def getscore(self,i):
+        model = self.base_model(i)
+        logLoss = model.score(self.X, self.lengths)
+        logn = np.log(len(self.X))
+        d = model.n_features
+        p = i ** 2 + 2 * d * i - 1
+
+        return -2.0 * logLoss + p * logn, model
+
+
     def select(self):
-        """ select the best model for self.this_word based on
-        BIC score for n between self.min_n_components and self.max_n_components
-
-        :return: GaussianHMM object
-        """
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-        # TODO implement model selection based on BIC scores
-        raise NotImplementedError
+        try:
+            l = range(self.min_n_components, self.max_n_components + 1)
+            score = float("Inf")
+            model = self.base_model(l[0])
+            for i in l:
+                logl, tmodel = self.getscore(i)
+                if logl < score:
+                    score = logl
+                    model = tmodel
+            return model
+        except:
+            #import pdb; pdb.set_trace()
+            return self.base_model(self.n_constant)
+        #for component in components:
+        #    v,m =
 
 
 class SelectorDIC(ModelSelector):
@@ -89,20 +123,67 @@ class SelectorDIC(ModelSelector):
     DIC = log(P(X(i)) - 1/(M-1)SUM(log(P(X(all but i))
     '''
 
+    def getscore(self, i):
+        model = self.base_model(i)
+        vals = []
+        for w, (x, l) in self.hwords.items():
+            if w not in self.this_word:
+                vals.append(model.score(x, l))
+        return model.score(self.X, self.lengths) - np.mean(vals), model
+
     def select(self):
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        """ select the best model for self.this_word based on
+        DIC score for n between self.min_n_components and self.max_n_components
+        :return: GaussianHMM object
+        """
+        try:
+            score = float("-Inf")
+            model = None
+            comps = range(self.min_n_components, self.max_n_components+1)
+            for c in comps:
+                l, tmodel = self.getscore(c)
+                if l > score:
+                    score = l
+                    model = tmodel
+            return model
 
-        # TODO implement model selection based on DIC scores
-        raise NotImplementedError
-
+        except:
+            #import pdb; pdb.set_trace()
+            return self.base_model(self.n_constant)
 
 class SelectorCV(ModelSelector):
     ''' select best model based on average log Likelihood of cross-validation folds
 
     '''
 
-    def select(self):
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
+    def getscore(self, i):
+        vals = []
+        for tx, testx in KFold().split(self.sequences):
+            #for tx, testx in KFold(n_splits=2).split(self.sequences):
+            self.X, self.lengths = combine_sequences(tx, self.sequences)
 
-        # TODO implement model selection using CV
-        raise NotImplementedError
+            model = self.base_model(i)
+            rx, l = combine_sequences(testx, self.sequences)
+            vals.append(model.score(rx, l))
+
+        return np.mean(scores), model
+
+    def select(self):
+        """ select the best model for self.this_word based on
+        CV score for n between self.min_n_components and self.max_n_components
+        It is based on log likehood
+        :return: GaussianHMM object
+        """
+        try:
+            score = float("Inf")
+            model = None
+            comps = range(self.min_n_components, self.max_n_components+1)
+            for c in comps:
+                l, tmodel = self.getscore(c)
+                if l < score:
+                    score = l
+                    model = tmodel
+            return model
+        except:
+            #import pdb; pdb.set_trace()
+            return self.base_model(self.n_constant)

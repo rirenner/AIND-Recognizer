@@ -6,7 +6,7 @@ RAW_FEATURES = ['left-x', 'left-y', 'right-x', 'right-y']
 GROUND_FEATURES = ['grnd-rx', 'grnd-ry', 'grnd-lx', 'grnd-ly']
 
 
-def show_errors(guesses: list, test_set: SinglesData):
+def show_errors(guesses, test_set):
     """ Print WER and sentence differences in tabular form
 
     :param guesses: list of test item answers, ordered
@@ -42,7 +42,7 @@ def getKey(item):
     return item[1]
 
 
-def train_all_words(training: WordsData, model_selector):
+def train_all_words(training, model_selector):
     """ train all words given a training set and selector
 
     :param training: WordsData object (training set)
