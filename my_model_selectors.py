@@ -166,7 +166,7 @@ class SelectorCV(ModelSelector):
             rx, l = combine_sequences(testx, self.sequences)
             vals.append(model.score(rx, l))
 
-        return np.mean(scores), model
+        return np.mean(vals), model
 
     def select(self):
         """ select the best model for self.this_word based on
@@ -175,12 +175,12 @@ class SelectorCV(ModelSelector):
         :return: GaussianHMM object
         """
         try:
-            score = float("Inf")
+            score = float("-Inf")
             model = None
             comps = range(self.min_n_components, self.max_n_components+1)
             for c in comps:
                 l, tmodel = self.getscore(c)
-                if l < score:
+                if l > score:
                     score = l
                     model = tmodel
             return model

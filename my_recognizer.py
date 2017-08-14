@@ -25,7 +25,6 @@ def recognize(models, test_set):
         score = float("-inf")
         guess = ""
         pdict = {}
-
         for trainword, model in models.items():
             try:
                 lp = model.score(x, l)
